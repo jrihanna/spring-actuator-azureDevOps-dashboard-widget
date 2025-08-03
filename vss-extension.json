@@ -1,0 +1,83 @@
+{
+    "manifestVersion": 1,
+    "id": "azure-devops-extensions-spring-actuator-widget",
+    "version": "1.0.3",
+    "name": "Spring Actuator",
+    "description": "Spring Actuator",
+    "publisher": "jriri",
+    "categories": [
+        "Azure Boards"
+    ],
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "icons": {
+        "default": "img/logo.png"
+    },
+    "contributions": [
+        {
+            "id": "SpringActuatorWidget",
+            "type": "ms.vss-dashboards-web.widget",
+            "targets": [
+                "ms.vss-dashboards-web.widget-catalog",
+                ".SpringActuatorWidget.Configuration"
+            ],
+            "properties": {
+                "name": "Spring Actuator",
+                "description": "Spring Actuator",
+                "catalogIconUrl": "img/CatalogIcon.png",
+                "previewImageUrl": "img/preview.png",
+                "uri": "actuator-tile.html",
+                "supportedSizes": [
+                    {
+                        "rowSpan": 1,
+                        "columnSpan": 2
+                    }
+                ],
+                "supportedScopes": [
+                    "project_team"
+                ]
+            }
+        },
+        {
+            "id": "SpringActuatorWidget.Configuration",
+            "type": "ms.vss-dashboards-web.widget-configuration",
+            "targets": [
+                "ms.vss-dashboards-web.widget-configuration"
+            ],
+            "properties": {
+                "name": "SpringActuatorWidget Configuration",
+                "description": "Configures SpringActuator Widget",
+                "uri": "configuration.html"
+            }
+        }
+    ],
+    "files": [
+        {
+            "path": "actuator-tile.html",
+            "addressable": true
+        },
+        {
+            "path": "configuration.html",
+            "addressable": true
+        },
+        {
+            "path": "css/widget-styles.css",
+            "addressable": true
+        },
+        {
+            "path": "css/configuration-styles.css",
+            "addressable": true
+        },
+        {
+            "path": "sdk/scripts",
+            "addressable": true
+        },
+        {
+            "path": "img",
+            "addressable": true
+        }
+    ]
+}
