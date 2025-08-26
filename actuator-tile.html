@@ -1,14 +1,74 @@
 <!DOCTYPE html>
 <html>
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
 <head>
     <link rel="stylesheet" href="css/widget-styles.css">
     <script src="sdk/scripts/VSS.SDK.min.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
             usePlatformStyles: true
         });
+
+        var getVersionInfo = async function (infoQueryPath) {
+            const response = fetch(infoQueryPath, {
+                cache: 'no-store',
+                method: 'GET',
+                mode: 'cors'
+            }).then(response => {
+                response.json().then(data => {
+                    var $versionContainer = $('#appVersion');
+                    if (data) {
+                        $versionContainer.text(data.build.version || "Version Not Available");
+                    } else {
+                        $versionContainer.text("Version Not Available");
+                    }
+
+                    if ($versionContainer.text === "Version Not Available") {
+                        $versionContainer.attr("class", "app-version-error");
+                    } else {
+                        $versionContainer.attr("class", "app-version");
+                    }
+                });
+                return response;
+            }).catch(error => {
+                var $versionContainer = $('#appVersion');
+                $versionContainer.text("Version Not Available");
+                $versionContainer.attr("class", "app-version-error");
+            });
+        }
+
+        function callApi(url) {
+            fetch(url, {
+                cache: 'no-store',
+                method: 'GET',
+                mode: 'cors'
+            })
+                .then(response => {
+                    // Parse the JSON response
+                    response.json().then(data => {
+
+                        var $statusContainer = $('#statusText');
+                        var $statusIndicator = $('#statusIndicator');
+                        // Log the fetched data
+                        if (data && data.status !== undefined && data.status === "UP") {
+                            $statusContainer.text("Healthy - All services operational");
+                            $statusIndicator.attr("class", "status-indicator status-success");
+                        } else {
+                            $statusContainer.text("Error - Service unavailable");
+                            $statusIndicator.attr("class", "status-indicator status-error");
+                        }
+                    });
+                })
+                .catch(error => {
+                    var $statusContainer = $('#statusText');
+                    var $statusIndicator = $('#statusIndicator');
+                    $statusContainer.text("Error - Service unavailable");
+                    $statusIndicator.attr("class", "status-indicator status-error");
+                });
+        }
 
         VSS.require(["TFS/Dashboards/WidgetHelpers", "TFS/WorkItemTracking/RestClient",], function (WidgetHelpers, TFS_Wit_WebApi) {
             WidgetHelpers.IncludeWidgetStyles();
@@ -32,63 +92,50 @@
                     }
 
                     try {
-
                         var $statusIndicator = $('#statusIndicator');
                         $statusIndicator.attr("class", "status-indicator status-loading");
                         $statusContainer.text("Checking - Validating services...");
+                        const firstVisibleLink = document.querySelector('div[class*=action-link][id*="-container"]');
+                        if (firstVisibleLink) {
+                            firstVisibleLink.classList.add('primary-link');
+                        }
 
-                        // Make the API call
-                        const response = await fetch(settings.queryPath + "");
-
-                        // Parse the JSON response
-                        const data = await response.json();
-                        // Log the fetched data
-                        if (data && data.completed !== undefined && data.completed == true) {
-                            $statusContainer.text("Healthy - All services operational");
-                            $statusIndicator.attr("class", "status-indicator status-success");
+                        if (settings.info) {
+                            $('#infoLink').attr("href", settings.queryPath + "/info");
                         } else {
-                            $statusContainer.text("Error - Service unavailable");
-                            $statusIndicator.attr("class", "status-indicator status-error");
+                            $('#infoLink-container').hide();
                         }
 
-                        if (data) {
-                            if (settings.info) {
-                                $('#infoLink').attr("href", settings.queryPath + "/info");
-                            } else {
-                                $('#infoLink').hide();
-                            }
-
-                            if (settings.metrics) {
-                                $('#metricsLink').attr("href", settings.queryPath + "/metrics");
-                            } else {
-                                $('#metricsLink').hide();
-                            }
-
-                            if (settings.heapDump) {
-                                $('#heapDumpLink').attr("href", settings.queryPath + "/heapdump");
-                            } else {
-                                $('#heapDumpLink').hide();
-                            }
-
-                            if (settings.threadDump) {
-                                $('#threadDumpLink').attr("href", settings.queryPath + "/threaddump");
-                            } else {
-                                $('#threadDumpLink').hide();
-                            }
-
-                            const firstVisibleLink = document.querySelector('a:not([style*="display: none"])');
-                            if (firstVisibleLink) {
-                                firstVisibleLink.classList.add('primary-link');
-                            }
+                        if (settings.metrics) {
+                            $('#metricsLink').attr("href", settings.queryPath + "/metrics");
+                        } else {
+                            $('#metricsLink-container').hide();
                         }
 
-                        return WidgetHelpers.WidgetStatusHelper.Success();
+                        if (settings.heapDump) {
+                            $('#heapDumpLink').attr("href", settings.queryPath + "/heapdump");
+                        } else {
+                            $('#heapDumpLink-container').hide();
+                        }
+
+                        if (settings.threadDump) {
+                            $('#threadDumpLink').attr("href", settings.queryPath + "/threaddump");
+                        } else {
+                            $('#threadDumpLink-container').hide();
+                        }
+
+                        callApi(settings.queryPath + "/health");
+
+                        getVersionInfo(settings.queryPath + "/info");
+
                     } catch (error) {
                         // Handle any errors that occur during the fetch or parsing
                         console.error('Error fetching data:', error);
                         $statusContainer.text("Error - Service unavailable");
                         $statusIndicator.attr("class", "status-indicator status-error");
                     }
+
+                    return WidgetHelpers.WidgetStatusHelper.Success();
                 }
 
                 return {
@@ -109,7 +156,10 @@
     <div class="extension-container">
         <div class="app-header">
             <div class="app-icon">APP</div>
-            <div class="app-name" id="appName">Application</div>
+            <div class="app-name">
+                <div id="appName">Application</div>
+                <div id="appVersion" class="app-version-error">Version Not Available</div>
+            </div>
         </div>
 
         <div class="status-section">
@@ -121,18 +171,26 @@
         </div>
 
         <div class="actions-section">
-            <a href="#" class="action-link" id="infoLink" target="_blank">
-                Info
-            </a>
-            <a href="#" class="action-link" id="metricsLink" target="_blank">
-                Metrics
-            </a>
-            <a href="#" class="action-link" id="heapDumpLink" target="_blank">
-                Heap Dump
-            </a>
-            <a href="#" class="action-link" id="threadDumpLink" target="_blank">
-                Thread Dump
-            </a>
+            <div class="action-link" id="infoLink-container">
+                <a href="#" class="" id="infoLink" target="_blank">
+                    Info
+                </a>
+            </div>
+            <div class="action-link" id="metricsLink-container">
+                <a href="#" class="" id="metricsLink" target="_blank">
+                    Metrics
+                </a>
+            </div>
+            <div class="action-link" id="heapDumpLink-container">
+                <a href="#" class="" id="heapDumpLink" target="_blank">
+                    Heap Dump
+                </a>
+            </div>
+            <div class="action-link" id="threadDumpLink-container">
+                <a href="#" class="" id="threadDumpLink" target="_blank">
+                    Thread Dump
+                </a>
+            </div>
         </div>
     </div>
 </body>

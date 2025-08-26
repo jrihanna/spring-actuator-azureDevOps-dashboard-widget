@@ -1,8 +1,8 @@
 {
     "manifestVersion": 1,
     "id": "azure-devops-extensions-spring-actuator-widget",
-    "version": "1.0.3",
-    "name": "Spring Actuator",
+    "version": "1.0.43",
+    "name": "Spring Boot Actuator",
     "description": "Spring Actuator",
     "publisher": "jriri",
     "categories": [
