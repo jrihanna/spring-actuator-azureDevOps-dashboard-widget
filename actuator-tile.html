@@ -21,13 +21,13 @@
                 response.json().then(data => {
                     var $versionContainer = $('#appVersion');
                     if (data) {
-                        $versionContainer.text(data.build.version || "Version Not Available");
+                        $versionContainer.text(data.build.version || "Version unavailable");
                     } else {
-                        $versionContainer.text("Version Not Available");
+                        $versionContainer.text("Version unavailable");
                     }
 
-                    if ($versionContainer.text === "Version Not Available") {
-                        $versionContainer.attr("class", "app-version-error");
+                    if ($versionContainer.text === "Version unavailable") {
+                        $versionContainer.attr("class", "info-error");
                     } else {
                         $versionContainer.attr("class", "app-version");
                     }
@@ -35,8 +35,8 @@
                 return response;
             }).catch(error => {
                 var $versionContainer = $('#appVersion');
-                $versionContainer.text("Version Not Available");
-                $versionContainer.attr("class", "app-version-error");
+                $versionContainer.text("Version unavailable");
+                $versionContainer.attr("class", "info-error");
             });
         }
 
@@ -70,19 +70,33 @@
                 });
         }
 
+        function updateLinks(url) {
+            $('#infoLink').attr("href", url + "/info");
+            $('#metricsLink').attr("href", url + "/metrics");
+            $('#heapDumpLink').attr("href", url + "/heapdump");
+            $('#threadDumpLink').attr("href", url + "/threaddump");
+        }
+
+        function initiliseStates(queryPath) {
+            var statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.setAttribute("class", "status-indicator status-loading");
+
+            var statusContainer = document.getElementById('statusText');
+            statusContainer.textContent = "Checking - Validating services...";
+
+            var versionContainer = document.getElementById('appVersion');
+            versionContainer.textContent = "Loading Version Info";
+            versionContainer.setAttribute("class", "warning");
+        }
+
         VSS.require(["TFS/Dashboards/WidgetHelpers", "TFS/WorkItemTracking/RestClient",], function (WidgetHelpers, TFS_Wit_WebApi) {
             WidgetHelpers.IncludeWidgetStyles();
             VSS.register("SpringActuatorWidget", function () {
-                var projectId = VSS.getWebContext().project.id;
-
-                var getQueryInfo = async function (widgetSettings) {
+                var getQueryInfo = function (widgetSettings) {
+                    var projectId = VSS.getWebContext().project.id;
 
                     // Extract query path from widgetSettings.customSettings and ask user to configure one if none is found
                     var settings = JSON.parse(widgetSettings.customSettings.data);
-                    var $titleContainer = $('#appName');
-                    $titleContainer.text(settings.urlName || "No Name Provided");
-
-                    var $statusContainer = $('#statusText');
 
                     if (!settings || !settings.queryPath) {
                         $titleContainer.text(settings.urlName || "No Name Provided");
@@ -91,37 +105,48 @@
                         return WidgetHelpers.WidgetStatusHelper.Success();
                     }
 
+                    var titleContainer = document.getElementById('appName');
+                    titleContainer.textContent = settings.urlName || "No Name Provided";
+
+                    var reloadContainer = document.getElementById('reloadContainer');
+                    reloadContainer.addEventListener('click', function () {
+                        reload(settings.queryPath);
+                    });
+
                     try {
-                        var $statusIndicator = $('#statusIndicator');
-                        $statusIndicator.attr("class", "status-indicator status-loading");
-                        $statusContainer.text("Checking - Validating services...");
+                        initiliseStates();
+
                         const firstVisibleLink = document.querySelector('div[class*=action-link][id*="-container"]');
+
                         if (firstVisibleLink) {
                             firstVisibleLink.classList.add('primary-link');
                         }
 
-                        if (settings.info) {
-                            $('#infoLink').attr("href", settings.queryPath + "/info");
-                        } else {
+                        updateLinks(settings.queryPath);
+
+                        if (!settings.info) {
                             $('#infoLink-container').hide();
                         }
+                        else {
+                            $('#infoLink-container').show();
+                        }
 
-                        if (settings.metrics) {
-                            $('#metricsLink').attr("href", settings.queryPath + "/metrics");
-                        } else {
+                        if (!settings.metrics) {
                             $('#metricsLink-container').hide();
+                        } else {
+                            $('#metricsLink-container').show();
                         }
 
-                        if (settings.heapDump) {
-                            $('#heapDumpLink').attr("href", settings.queryPath + "/heapdump");
-                        } else {
+                        if (!settings.heapDump) {
                             $('#heapDumpLink-container').hide();
+                        } else {
+                            $('#heapDumpLink-container').show();
                         }
 
-                        if (settings.threadDump) {
-                            $('#threadDumpLink').attr("href", settings.queryPath + "/threaddump");
-                        } else {
+                        if (!settings.threadDump) {
                             $('#threadDumpLink-container').hide();
+                        } else {
+                            $('#threadDumpLink-container').show();
                         }
 
                         callApi(settings.queryPath + "/health");
@@ -130,9 +155,9 @@
 
                     } catch (error) {
                         // Handle any errors that occur during the fetch or parsing
-                        console.error('Error fetching data:', error);
-                        $statusContainer.text("Error - Service unavailable");
-                        $statusIndicator.attr("class", "status-indicator status-error");
+                        // console.error('Error fetching data:', error);
+                        $('#statusText').text("Error - Service unavailable");
+                        $('#statusIndicator').attr("class", "status-indicator status-error");
                     }
 
                     return WidgetHelpers.WidgetStatusHelper.Success();
@@ -147,8 +172,15 @@
                     }
                 }
             });
+
             VSS.notifyLoadSucceeded();
         });
+
+        function reload(queryPath) {
+            initiliseStates(queryPath);
+            callApi(queryPath + "/health");
+            getVersionInfo(queryPath + "/info");
+        }
     </script>
 </head>
 
@@ -158,15 +190,22 @@
             <div class="app-icon">APP</div>
             <div class="app-name">
                 <div id="appName">Application</div>
-                <div id="appVersion" class="app-version-error">Version Not Available</div>
+                <div class="app-version">
+                    <div id="appVersion" class="warning">
+                        Loading Version Info
+                    </div>
+                    <div class="reload-img-container" id="reloadContainer">
+                        <img src="img/reload-icon-20.png" alt="Loading..." class="loading-spinner" />
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="status-section">
             <div class="status-label">API Status</div>
-            <div class="status-indicator status-success" id="statusIndicator">
+            <div class="status-indicator status-loading" id="statusIndicator">
                 <div class="status-dot"></div>
-                <span id="statusText"></span>
+                <span id="statusText">Checking - Validating services...</span>
             </div>
         </div>
 

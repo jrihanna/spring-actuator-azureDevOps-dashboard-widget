@@ -1,10 +1,16 @@
 {
     "manifestVersion": 1,
     "id": "azure-devops-extensions-spring-actuator-widget",
-    "version": "1.0.43",
+    "version": "1.0.77",
     "name": "Spring Boot Actuator",
-    "description": "Spring Actuator",
+    "description": "Spring Boot Actuator",
     "publisher": "jriri",
+    "public": true,
+    "content": {
+        "details": {
+            "path": "overview.md"
+        }
+    },
     "categories": [
         "Azure Boards"
     ],
@@ -25,8 +31,8 @@
                 ".SpringActuatorWidget.Configuration"
             ],
             "properties": {
-                "name": "Spring Actuator",
-                "description": "Spring Actuator",
+                "name": "Spring Boot Actuator",
+                "description": "Spring Boot Actuator",
                 "catalogIconUrl": "img/CatalogIcon.png",
                 "previewImageUrl": "img/preview.png",
                 "uri": "actuator-tile.html",
@@ -77,6 +83,10 @@
         },
         {
             "path": "img",
+            "addressable": true
+        },
+        {
+            "path": "overview.md",
             "addressable": true
         }
     ]

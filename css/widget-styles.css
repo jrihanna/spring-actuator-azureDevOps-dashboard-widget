@@ -23,7 +23,6 @@
  .app-header {
      display: flex;
      align-items: center;
-     margin-bottom: 8px;
  }
 
  .app-icon {
@@ -44,11 +43,11 @@
      font-size: 14px;
      font-weight: 600;
      color: #323130;
+     width: 100%;
  }
 
  .status-section {
      margin-bottom: 3px;
-     margin-top: 10px;
  }
 
  .status-label {
@@ -136,6 +135,7 @@
      font-weight: 500;
      transition: all 0.2s ease;
      background: white;
+     align-content: center;
  }
 
  .action-link>a {
@@ -190,10 +190,18 @@
  .app-version {
      font-size: 12px;
      font-style: italic;
+     display: flex;
+     justify-content: space-between;
  }
 
- .app-version-error {
-     font-size: 12px;
-     font-style: italic;
+ .info-error {
      color: #d13438;
+ }
+
+ .warning {
+     color: #ffb900;
+ }
+
+ .reload-img-container {
+     cursor: pointer;
  }

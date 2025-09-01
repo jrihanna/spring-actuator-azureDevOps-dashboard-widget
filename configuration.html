@@ -71,9 +71,13 @@
                 }
 
                 function updateOutput(widgetConfigurationContext) {
+                    let url = $queryUrl.val().trim();
+                    if (url.endsWith('/')) {
+                        url = url.slice(0, -1);
+                    }
                     var customSettings = {
                         data: JSON.stringify({
-                            queryPath: $queryUrl.val(),
+                            queryPath: url,
                             urlName: $queryName.val(),
                             info: $infoCheckbox.is(":checked"),
                             metrics: $metricsCheckbox.is(":checked"),
@@ -81,6 +85,7 @@
                             threadDump: $threadDumpCheckbox.is(":checked")
                         })
                     };
+
                     var eventName = WidgetHelpers.WidgetEvent.ConfigurationChange;
                     var eventArgs = WidgetHelpers.WidgetEvent.Args(customSettings);
                     widgetConfigurationContext.notify(eventName, eventArgs);
@@ -128,9 +133,13 @@
                         return WidgetHelpers.WidgetStatusHelper.Success();
                     },
                     onSave: function () {
+                        let url = $queryUrl.val().trim();
+                        if (url.endsWith('/')) {
+                            url = url.slice(0, -1);
+                        }
                         var customSettings = {
                             data: JSON.stringify({
-                                queryPath: $queryUrl.val(),
+                                queryPath: url,
                                 urlName: $queryName.val(),
                                 info: $infoCheckbox.is(":checked"),
                                 metrics: $metricsCheckbox.is(":checked"),
